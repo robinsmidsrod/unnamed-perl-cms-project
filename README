@@ -1,0 +1,86 @@
+THIS IS A BRAINSTORMING!
+
+I've tried to keep the meaning of the verbs similar to RFC jargon.
+
+---
+
+A website is a collection of paths.
+
+A path can be connected to several host(names), or it can be connected to
+none (global path, think joint resource across hostnames)
+
+A path can be public or private.
+
+A path has an ordered set (array) of blocks.
+
+A path must be able to calculate its checksum (think ETag) based on the
+combined checksum of all its blocks.
+
+A path must be able to calulate its last modified time based on the newest
+timestamp from all of its blocks.
+
+A path must be able to calculate its expiry time based on the shortest
+required expiry time from all of its blocks.
+
+A path must be able to calculate its size based on the combined size of all
+of its blocks.
+
+A block can be dynamic or static.
+
+A block must be able to calculate it's own unique id/checksum that changes
+when its (generated) product changes (for edge side includes, caching etc,
+probably SHA1, MD5 or some other hashing method).
+
+A block must be able to tell when it was last modified (for caching aswell).
+
+A block should implement one or more methods that indicate what part of the
+page it wants to work on (http header, header, body, footer, +more
+[suggestions welcome] ). Think (possibly) Drupal hooks.
+
+A block must indicate its type (mimetype?), because a given path can only
+contain blocks that have compatible types (think http header Content-type).
+
+A block must indicate its encoding if it is textual. UTF-8 could be a sane
+default.
+
+A block must have an identifier (probably UUID) that doesn't change
+(immutable) that makes it easily adressable across instances of the system
+(think synchronization/plugins).
+
+A block must specify its expiry time (also for caching). 0 should probably
+mean immediately become stale, but I'm unsure what measure we should use
+here. For some sites "seconds" might be too wide, on the other hand,
+Cache-Control/maxage uses seconds.
+
+A block must specify its size in bytes (think Content-Length).
+
+A block can contain an ordered set of other blocks (I'm not exactly sure
+about this one). I'm thinking wrappers that pull in a large set of common
+behaviour (think themes, plugins, blog front page etc.
+
+Static blocks are rendered by a built-in method that uses a data structure
+(hash possibly) of the above mentioned required methods. The checksum is
+calculated when the block is created so that no more calculation is required
+on usage. The static renderer should (maybe always) use a streaming interface to
+minimize memory usage of the process. Scalar printing could be used for
+small blocks (<64KB?). Static blocks are usually text, pictures, sound, video
+or something else of binary nature.
+
+TODO (please expand/move):
+
+Authentication
+Authorization
+Auditing / logging
+Distribution
+Deployment (think web installer like the most popular PHP webapps, maybe
+with an automated local::lib bootstrap or something)
+Data storage (database, key/value store, OODB, KiokuDB)?
+Plugin deployment/distribution
+Editing environment
+Manipulation of paths and blocks to actually create pages.
+Manipulation API for above mentioned elements.
+Localization/i18n (which is a killer [bad] that makes too much stuff dynamic)
+How to resolve authoritative path (or produce 404)
+How to map HTTP errors to paths (so that they can be customized)
+User/group/role management (Kerberos, LDAP, OpenID, SAML)
+Identity management (view as guest, view as another user)
