@@ -84,3 +84,197 @@ How to resolve authoritative path (or produce 404)
 How to map HTTP errors to paths (so that they can be customized)
 User/group/role management (Kerberos, LDAP, OpenID, SAML)
 Identity management (view as guest, view as another user)
+Choose a framework (or frameworks, with dispatching plugins)
+Maybe use some stuff from http://weftsoar.net/~hdp/cpan/ for deployment
+
+Unrefined logs from #perlcms@irc.perl.org:
+
+(2009-07-10 10:50:31) zby: anyway first the problems I see
+(2009-07-10 10:50:36) robinsmidsrod: in fact, I'm thinking that maybe we don't need to actually choose a framework
+(2009-07-10 10:50:39) zby: I think you need to choose a platform
+(2009-07-10 10:50:45) zby: Mojo is interesting
+(2009-07-10 10:51:00) robinsmidsrod: maybe we can just make a dispatching plugin for any of the large ones (Catalyst, Mojo, CGI::Application)
+(2009-07-10 10:51:02) zby: but you'd need to find more people that use it
+(2009-07-10 10:51:11) zby: I have no experience with it
+(2009-07-10 10:51:21) robinsmidsrod: me neither - I have just skimmed the docs
+(2009-07-10 10:51:26) zby: hmm 
+(2009-07-10 10:51:36) robinsmidsrod: in fact, I'm not that experienced with catalyst either
+(2009-07-10 10:51:39) zby: I am now experimenting with having the dispatcher in the controller
+(2009-07-10 10:51:40) robinsmidsrod: I've just made one app with it
+(2009-07-10 10:51:48) robinsmidsrod: actually, two apps
+(2009-07-10 10:51:55) zby: so in theory you could reuse it in other framework
+(2009-07-10 10:51:58) robinsmidsrod: one is here: photo-competitions.net
+(2009-07-10 10:53:04) robinsmidsrod: because the only thing that is really framework-relevant is how to map the request/response objects and how to dispatch paths
+(2009-07-10 10:53:21) robinsmidsrod: maybe it would be bound a bit more when we approach auth/authz
+(2009-07-10 10:53:28) zby: Caught exception in ->ACL error rethrower "Access to competition/browse/all/index denied by rule CODE(0x470ed60) (defined at /home/vhosts/photo-competitions.com/script/../lib/PhotoComp.pm line 67)."
+(2009-07-10 10:53:53) robinsmidsrod: guess I need to fix that 
+(2009-07-10 10:54:01) zby: yes - the dispatching is the most framework dependant
+(2009-07-10 10:54:08) zby: but there are other things
+(2009-07-10 10:54:24) zby: like the upload field
+(2009-07-10 10:54:29) zby: in the request object
+(2009-07-10 10:54:39) zby: small things - but they crop up everywhere
+(2009-07-10 10:56:12) zby: then there is auth
+(2009-07-10 10:56:46) zby: I think you need to choose the framework
+(2009-07-10 10:56:50) zby: to start with
+(2009-07-10 10:57:07) zby: you need to write a prototype to show people
+(2009-07-10 10:57:10) zby: and attract developers
+(2009-07-10 10:57:47) robinsmidsrod: zby: yeah, but first I need to think about the data/dispatch model I want to use
+(2009-07-10 10:57:57) robinsmidsrod: now that site works again
+(2009-07-10 10:58:15) robinsmidsrod: still problems...
+(2009-07-10 10:59:15) robinsmidsrod: it's just an uncaught exception because I didn't remove an url that was supposed to be hidden for guest users - it was a school project - so it's not exactly well-polished
+(2009-07-10 11:00:41) zby: OK 
+(2009-07-10 11:00:57) zby: I've skimmed your github readme
+(2009-07-10 11:00:58) robinsmidsrod: well, it's my biggest catalyst project though
+(2009-07-10 11:01:22) robinsmidsrod: what are your immediate thoughts?
+(2009-07-10 11:01:29) zby: what is the difference between path and block?
+(2009-07-10 11:01:40) robinsmidsrod: a path is basically an URI
+(2009-07-10 11:01:52) robinsmidsrod: think of it like a key to a list of blocks
+(2009-07-10 11:02:37) zby: OK - but blocks are also list of blocks?
+(2009-07-10 11:02:38) robinsmidsrod: a block is a small part of the entire page that will actually render that path
+(2009-07-10 11:03:04) robinsmidsrod: zby: that's the part I'm not sure about - if we should allow blocks to wrap other blocks
+(2009-07-10 11:03:10) robinsmidsrod: or if it will just complicate stuff
+(2009-07-10 11:03:34) zby: I would propose that it is recursive
+(2009-07-10 11:03:53) robinsmidsrod: zby: yeah, that gives us much more flexibility
+(2009-07-10 11:03:54) zby: but I would say that a path identifies a block
+(2009-07-10 11:04:44) robinsmidsrod: hmm...interesting
+(2009-07-10 11:05:02) robinsmidsrod: and then you just assume that a block, if it is static just wraps to the entire page
+(2009-07-10 11:05:13) robinsmidsrod: if it is dynamic it probably includes children
+(2009-07-10 11:05:42) zby: and you could also render sub-blocks
+(2009-07-10 11:05:48) zby: because they would have paths
+(2009-07-10 11:05:58) zby: this could be usefull for debugging
+(2009-07-10 11:06:26) robinsmidsrod: rephrase that thing about sub-blocks
+(2009-07-10 11:06:32) robinsmidsrod: I didn't quite get it
+(2009-07-10 11:07:10) zby: you let a block contain other blocks
+(2009-07-10 11:07:29) zby: i.e. sub-blocks
+(2009-07-10 11:07:36) robinsmidsrod: now I remember why I was thinking that a path is a list of blocks - it's to be able to work nice towards ESI
+(2009-07-10 11:07:40) robinsmidsrod: (Edge Side Includes)
+(2009-07-10 11:07:56) robinsmidsrod: to allow static and dynamic blocks in the same page
+(2009-07-10 11:08:18) zby: yeah - so I would say that a path leads to a block
+(2009-07-10 11:08:27) zby: and that block can contain the list of sub-blocks
+(2009-07-10 11:08:39) zby: this would be nicely recursive
+(2009-07-10 11:09:00) robinsmidsrod: okay, how do we map this so that ESI can get to it?
+(2009-07-10 11:09:15) zby: I have no experience with ESI
+(2009-07-10 11:09:24) zby: give me some link - so that I'll read about it
+(2009-07-10 11:09:45) zby: anyway - now I need a daughter emmergency break
+(2009-07-10 11:10:02) robinsmidsrod: maybe this one? http://varnish.projects.linpro.no/wiki/ESIfeatures
+(2009-07-10 11:11:00) robinsmidsrod: I don't know a lot about ESI either, but I know it's used a lot in high-performance setups
+(2009-07-10 11:11:12) robinsmidsrod: and I'd like to accomodate for it in the design
+(2009-07-10 11:11:54) robinsmidsrod: even better link: http://en.wikipedia.org/wiki/Edge_Side_Includes
+(2009-07-10 11:14:25) zby: OK - thanks - I'll read about it
+(2009-07-10 11:14:45) zby: but to give you some perspective on what I work now on
+(2009-07-10 11:14:58) zby: I have in mind a Catalyst::Elements project
+(2009-07-10 11:15:11) zby: for assembling basic features to a Cat application
+(2009-07-10 11:15:17) zby: like authentication
+(2009-07-10 11:15:20) zby: comments
+(2009-07-10 11:15:23) zby: etc
+(2009-07-10 11:15:31) zby: CRUD
+(2009-07-10 11:15:53) zby: I think this is now my priority
+(2009-07-10 11:16:22) zby: but I can take part in the discussions about the cms
+(2009-07-10 11:16:44) zby: and if you have any particular needs - then I can try to write some Element for it
+(2009-07-10 11:16:53) zby: what do you think about that?
+(2009-07-10 11:17:03) robinsmidsrod: let me think before I answer
+(2009-07-10 11:17:12) zby: yeah - sure
+(2009-07-10 11:18:03) robinsmidsrod: your concept seems smart too, the concept being to assemble catalyst components like legos into forming a complete cat-app
+(2009-07-10 11:18:32) zby: yes - this is actually quite obvious one
+(2009-07-10 11:18:53) zby: what I add to it is that I am trying to make it simple and replaceable
+(2009-07-10 11:18:54) robinsmidsrod: it's not so far from what I have in mind - 
+(2009-07-10 11:18:58) zby: scaffolding
+(2009-07-10 11:19:14) zby: yeah - I hope so :)
+(2009-07-10 11:19:45) robinsmidsrod: but I guess I'm more focused on getting the foundation right so that caching and expiry and plugins work with very little effort
+(2009-07-10 11:20:18) robinsmidsrod: actually, I somewhat see this as a refinement to what I do at work, but more generic - see portfolio.no
+(2009-07-10 11:20:52) robinsmidsrod: that is a project focused on the needs of learning
+(2009-07-10 11:21:02) robinsmidsrod: web-based learning
+(2009-07-10 11:21:27) zby: interesting
+(2009-07-10 11:21:28) robinsmidsrod: so I'm trying to take what knowledge I have from that project and generalize it into 
+(2009-07-10 11:21:37) robinsmidsrod: I've been working on that thing since 2005
+(2009-07-10 11:21:59) robinsmidsrod: at that time catalyst was just in its infancy (at least from my perspective) so it's not based on catalyst
+(2009-07-10 11:22:30) zby: yeah catalyst started in 2005
+(2009-07-10 11:23:22) robinsmidsrod: so you can probably understand where the ideas I've written down come from
+(2009-07-10 11:23:43) robinsmidsrod: it's sort of a refinement of the stuff I've been doing at work for the last 4 years
+(2009-07-10 11:23:52) zby: great!
+(2009-07-10 11:24:20) zby: OK - so let me read about the ESI
+(2009-07-10 11:24:46) zby: and think a bit how could you fit my Elements idea into your project
+(2009-07-10 11:26:21) robinsmidsrod: the very simple concept is that building a website should be like constructing it from lego bricks
+(2009-07-10 11:26:54) robinsmidsrod: that's how I thought of the term "block"
+(2009-07-10 11:30:07) zby: :)
+(2009-07-10 11:32:45) robinsmidsrod: we also need to think about versioning and deprecation of features, and APIs, to make sure that upgrading and such is also clean
+(2009-07-10 11:34:00) robinsmidsrod: I was thinking that the blocks themselves could be version, something like what git does with blobs
+(2009-07-10 11:34:11) robinsmidsrod: s/version/versioned/
+(2009-07-10 11:34:26) robinsmidsrod: this could also enable wiki-like sites that allow rollback of content and history
+(2009-07-10 11:35:02) robinsmidsrod: and then maybe a system to purge unreferenced blocks or something
+(2009-07-10 11:35:48) robinsmidsrod: as you can see, I have lots of thoughts on the subject - but I'm trying to take a minimalist approach to what the core system should handle
+(2009-07-10 11:36:37) robinsmidsrod: I don't know if it's approriate, but think of it somewhat like git for web-development with dynamic content (generated from perl code) thrown into the mix
+(2009-07-10 11:37:02) robinsmidsrod: maybe even some code signing for authenticated plugins/blocks or whatever
+(2009-07-10 11:40:26) robinsmidsrod: as a photographer and programmer I think of useful applications as e.g. a blog where I talk about programming - my portfolio of my pictures, my photo-plog (which is mostly pictures) - all of this should be possible to host on one installation of the system
+(2009-07-10 11:40:46) robinsmidsrod: but I'm also thinking that it could be useful as a ISP hosting solution aswell
+(2009-07-10 11:41:38) robinsmidsrod: so a strong API for manipulating the data structures via REST/SOAP or something sounds about right
+(2009-07-10 11:42:05) robinsmidsrod: this way you could make tools like the flickr uploader that would allow you to keep your portfolio site updated offline
+(2009-07-10 11:42:35) robinsmidsrod: or you could keep a staging system at one location and just sync it to production when you're ready
+(2009-07-10 11:42:45) ***robinsmidsrod is just throwing out ideas
+(2009-07-10 11:44:47) zby: :)
+(2009-07-10 11:44:54) zby: thats a long list
+(2009-07-10 11:52:20) robinsmidsrod: yeah - it is
+(2009-07-10 11:52:28) ***robinsmidsrod is eating - be back soon
+(2009-07-10 13:14:26) robinsmidsrod: okay, I'll be off to do some personal errands, but if you have anything to share about the project please send a pull request for the docs, give me a patch or just shout of some ideas here - I'll eventually be back and will read them
+(2009-07-10 13:14:30) robinsmidsrod: c u
+(2009-07-10 13:14:53) robinsmidsrod: if Theory comes online, try to invite him here...
+(2009-07-10 13:15:13) robinsmidsrod!~robin@197.84-49-220.nextgentel.com: robinsmidsrod has changed the topic to: http://github.com/robinsmidsrod/unnamed-perl-cms-project
+(2009-07-10 13:15:45) robinsmidsrod!~robin@197.84-49-220.nextgentel.com: robinsmidsrod has changed the topic to: http://github.com/robinsmidsrod/unnamed-perl-cms-project - have a look at the readme and give me your input
+(2009-07-10 18:39:26) Theory [~Theory@c-76-105-135-51.hsd1.or.comcast.net] entered the room.
+(2009-07-10 18:40:12) robinsmidsrod: I had a discussion with zby earlier today
+(2009-07-10 18:41:08) robinsmidsrod: Theory: I'm not sure how this aligns with your concept - and btw - why are you interested in this when you obviously are deeply involved in bricolage? is it not doing what you want?
+(2009-07-10 18:43:28) Theory: Bricolage is a back-end workflow and publishing system.
+(2009-07-10 18:43:32) Theory: It doesn't actually serve sites.
+(2009-07-10 18:43:46) Theory: Working on a project now where $client develops content in Bricolage and publishes it to a Drupal server.
+(2009-07-10 18:43:52) Theory: Drupal has filled me with hate.
+(2009-07-10 18:43:56) Theory: QED
+(2009-07-10 18:44:48) robinsmidsrod: okay - I have some logs from my conversation with zby, so that you have a bit more meat on the bone in addition to the README
+(2009-07-10 18:44:58) robinsmidsrod: btw, please clone that repo and add your bits
+(2009-07-10 18:45:44) Theory: will do
+(2009-07-10 18:46:23) robinsmidsrod: http://gist.github.com/144612 - here is the log from earlier today
+(2009-07-10 18:46:42) robinsmidsrod: hopefully it will sort of highlight what I'm trying to do, in addition to the readme
+(2009-07-10 18:48:00) robinsmidsrod: actually, if that is what bricolage is good at, it seems quite obvious that it would be able to plug into this CMS system via its (intended) API
+(2009-07-10 18:48:16) Theory: exactly
+(2009-07-10 18:48:40) robinsmidsrod: I already have plans for making something like the flickr uploader
+(2009-07-10 18:48:56) robinsmidsrod: just for Lightroom :)
+(2009-07-10 18:49:33) robinsmidsrod: imagine being able to publish and keep up to date my portfolio photography website directly from my photo manager
+(2009-07-10 18:49:37) robinsmidsrod: neat idea
+(2009-07-10 18:49:54) Theory: yep
+(2009-07-10 18:50:00) Theory: The API is key.
+(2009-07-10 18:50:06) Theory: I want a desktop app for managing content.
+(2009-07-10 18:50:22) robinsmidsrod: exactly, but before we can make an API we need to know exactly what that API should manage :)
+(2009-07-10 18:50:34) Theory: Sure.
+(2009-07-10 18:50:40) robinsmidsrod: that is, the data structure and how it all fits together
+(2009-07-10 18:50:43) Theory: It should have a blogging API compatible layer, I'll say that much.
+(2009-07-10 18:50:59) Theory: Okay, I gotta hack now, but I'll add more later.
+(2009-07-10 18:51:08) robinsmidsrod: I see no reason why we cannot make a plugin that wraps that api into our native api
+(2009-07-10 18:51:15) Theory: right
+(2009-07-10 18:51:58) robinsmidsrod: but what is really important for me is that we really do deployment and upgrading _right_
+(2009-07-10 18:52:07) Theory: Yeah, agreed
+(2009-07-10 18:52:16) Theory: I was thinking of a shipwright-built installer or something
+(2009-07-10 18:52:16) robinsmidsrod: something ala all the php web installers
+(2009-07-10 18:52:23) Theory: So users can just unpack it and go
+(2009-07-10 18:52:25) Theory: rght
+(2009-07-10 18:52:29) Theory: GMTA
+(2009-07-10 18:52:30) robinsmidsrod: something you just upload to their webhost and go 
+(2009-07-10 18:53:18) robinsmidsrod: if we need extra stuff we sort of bootstrap a local::lib environment (or something else) that will enable us to package cpan modules we need without worries - maybe build it on top of PAR ?
+(2009-07-10 18:53:48) robinsmidsrod: we'll probably trip over  some bugs doing that, but in the end it will probably benefit the perl community a lot
+(2009-07-10 18:54:02) Theory: Yeah, not sure about PAR
+(2009-07-10 18:55:28) robinsmidsrod: its important that we stick with this deployment practice not just for the core, but for plugins aswell, to build a good consensus on how to do things The Right Way
+(2009-07-10 18:56:19) Theory: agreed
+(2009-07-10 18:56:26) robinsmidsrod: if we really want compatability I think we need to assume that we cannot distribute stuff in source - we need to distribute compiled packages for the platforms
+(2009-07-10 18:56:38) Theory: my thought exactly
+(2009-07-10 18:56:59) robinsmidsrod: and hopefully set up some kind of repo where people can distribute their plugins/themes/packages/whatever
+(2009-07-10 18:57:06) robinsmidsrod: not to riddle CPAN with more than the core
+(2009-07-10 18:58:24) robinsmidsrod: so if you're a perl hacker you should be able to just say cpan> install NameOfCMS and off you go - everything taken care of, maybe some questions asked on where you want your root folder to be and such - but it's really just an easy way to download the core distribution
+(2009-07-10 18:59:35) robinsmidsrod: or maybe that packages should be the DEV environment, where you actually make plugins
+(2009-07-10 19:00:23) robinsmidsrod: as you can see, I have a lot of ideas on how to structure things
+(2009-07-10 19:03:37) robinsmidsrod: I'm not exactly sure if I'd like to support windows, so I'd like to limit myself to maybe Debian, Ubuntu, RedHat, Suse, and possibly (Open)Solaris and possibly some of the BSDs for binary support
+(2009-07-10 19:03:55) robinsmidsrod: in fact, I'd actually feel comfortable limiting the binaries to platforms that are actually open
+(2009-07-10 19:04:16) robinsmidsrod: because then we could just use virtual machines to build the binaries
+(2009-07-10 19:04:47) robinsmidsrod: that would actually mean that redhat is out, fedora is in, and suse is out, but opensuse is in
+(2009-07-10 19:05:36) robinsmidsrod: if we make the build process painless we should be able to support quite a number of platforms
+(2009-07-10 19:06:08) robinsmidsrod: I would also suggest to use exact versions of CPAN modules, to avoid API differences in new modules
+(2009-07-10 19:06:45) robinsmidsrod: and manually upgrading to new modules as they pass (our) testing
+(2009-07-10 19:07:10) robinsmidsrod: it's a big project - but if we do it right I think people could start to look differently at perl again
+(2009-07-10 19:07:19) robinsmidsrod: it's definitely a high profile target
