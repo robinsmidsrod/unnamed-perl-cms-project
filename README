@@ -1,4 +1,5 @@
 THIS IS A BRAINSTORMING!
+========================
 
 I've tried to keep the meaning of the verbs similar to RFC jargon.
 
@@ -87,7 +88,119 @@ Identity management (view as guest, view as another user)
 Choose a framework (or frameworks, with dispatching plugins)
 Maybe use some stuff from http://weftsoar.net/~hdp/cpan/ for deployment
 
+---
+
+Notes from Theory
+-----------------
+
+A lot of what you say above about checksums is over my head, but I'm assuming
+that you're trying to get at the sort of identity and versioning support
+that's in Git, which is perfect.
+
+My preliminary thoughts, in a nutshell:
+
+* Blocks -- I like this, though I'm unsure about the term (it beats the crap
+  out of Drupal's "nodes," though). Blocks are like Elements in Bricolage,
+  really (including the support for recursion). These are a crucial part of
+  the system. In fact, in my mind I have been thinking that there would be
+  three kinds of blocks: static, cached, and dynamic.
+
+  + Static blocks are just template includes. They don't do anything, just
+    pull in content. Useful for simple things like ads and HTML head tags.
+
+  + Cached blocks would be the most common. When an update is sent to them,
+    they make the update, and then kick the code to generate the cached copy
+    of the output. This cached copy is then what gets pulled in for every
+    request. This avoids database and API overhead on every request.
+
+    The best example I can think of is comments. When someone submits a
+    comment, the block's API makes the appropriate database changes, and then
+    calls the templating code, which generates a file with all of the comments
+    in reverse chronological order. This output is then written to the file
+    system to be pulled in like any other include, or else it's written to
+    some sort of cache and pulled from the cache. It's stupid for a system to
+    generate all of the comments to display every time a page is loaded; they
+    should be written out only when something changes.
+
+  + Dynamic blocks will generate their content for display every time they're
+    called. This will be useful for, say, a scrolling list of a discussion
+    that updates regularly and displays only a few items. The assumption here
+    is that the content to be served will change as often or more often than
+    the block is asked to output its display data.
+
+* Templates -- I find the templating support in Drupal to be less than
+  intuitive. I don't get it at all; there seem to be five ways to do
+  everything, several layers to deal with, and way too many global variables.
+  In my vision, each block will have one or more templates associated with it,
+  let's say in Template Toolkit. The templates will have only 1 or 2 global
+  objects -- the block object currently being rendered, and perhaps an object
+  that's controlling the rendering process (this is very similar to how
+  Bricolage does things). Everything needed is accessed through these objects
+  or the CMS API (calling class methods and constructors) or any Perl that you
+  can execute inside TT.
+
+  Users can override the default behavior of templates by copying them to a
+  different directory which is above the default directory in the template
+  resolution path (the `INCLUDE_PATH` in TT). This gives users full control
+  over the appearance of individual blocks, and they can break things up into
+  other templates to include if they like.
+
+  Furthermore, they can override the appearance of particular templates by
+  placing other copies in different parts of the document root. For example, I
+  might have a `/comments.tt` template in my template document root, but also
+  `/sports/comments.tt` to make them look different for all requests to
+  beneath the `/comments` URI.
+
+* Installer -- We discussed this on IRC, but it could use some filling out in
+  this README. I firmly believe that installing the CMS should be as easy as:
+
+  1. Set up a supported Web server.
+  2. Set up a supported database.
+  3. Unzip the CMS download anywhere in the Web server document root.
+  4. Edit a database configuration file with connection information (DSN,
+     username, password, etc.)
+  5. Open a URL in the browser to the proper URL for CMS. If you put it in
+     `$DOC_ROOT/cms`, then you open the browser to http://example.com/cms.
+  6. The CMS will display a configuration wizard to guide the user through
+     configuring the CMS and building its database.
+  7. All configuration data will be stored in the database.
+  8. The doc root will be modified to have the proper permissions.
+
+  That sounds like a lot, but it's not. There is no installing stuff from
+  CPAN, no compiling, nothing. Just setup and go, with all configuration, other
+  than the database DSN, via the Web browser. The app will figure out as much
+  as it can, ask the user for info where necessary, and provide an an
+  interface (and a REST API?) for editing that configuration.
+
+* REST API -- The CMS should have a complete REST API. Anything you can do via
+  its admin interface you should be able to do via the API. And anything you
+  can do with blocks you should be able to do via the API. This means that we
+  need to make it extremely easy for block authors to support the API just by
+  implementing appropriate methods. In fact, the API for block modules should
+  be well-defined and consistent, so that the system can just use them all in
+  the same way.
+
+* URLs - Gotta have legible URLs. Or rather, URLs should be pretty much
+  anything users want them to be. If I've installed the CMS in the document
+  root, a user should be able to edit a text document named `/index.mkdn` or
+  `/foo/bar/2009/07/21/catalyst.txtl` and those will then translate into the
+  URLs `/index.html` and `/foo/bar/2009/07/21/catalyst.html`. That is, the
+  URLs for editing documents should be the same as for serving the content
+  from those documents. The content type of the documents will map file name
+  suffixes to content types (the above two examples would be a markdown file
+  and a textile file). The templates can then use those files, converted to
+  HTML (or whatever a template requires), in their output.
+
+So I'm thinking a bit higher-level than you are, I think, very much in terms
+of usability, rather than architecture (although I have some architectural
+ideas, too, mostly around database access). Feel free to integrate as you deem
+appropriate, or comment on stuff. I think I'd like to post these thoughts in
+my blog, as well, but would appreciate your feedback, first.
+
+---
+
 Unrefined logs from #perlcms@irc.perl.org:
+------------------------------------------
 
 (2009-07-10 10:50:31) zby: anyway first the problems I see
 (2009-07-10 10:50:36) robinsmidsrod: in fact, I'm thinking that maybe we don't need to actually choose a framework
