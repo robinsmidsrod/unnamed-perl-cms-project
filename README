@@ -27,17 +27,17 @@ of its blocks.
 
 A block can be dynamic or static.
 
-A block must be able to calculate it's own unique id/checksum that changes
+A block must be able to calculate its own unique id/checksum that changes
 when its (generated) product changes (for edge side includes, caching etc,
 probably SHA1, MD5 or some other hashing method).
 
 A block must be able to tell when it was last modified (for caching aswell).
 
 A block should implement one or more methods that indicate what part of the
-page it wants to work on (http header, header, body, footer, +more
+page it wants to work on (http header, head, body, footer, +more
 [suggestions welcome] ). Think (possibly) Drupal hooks.
 
-A block must indicate its type (mimetype?), because a given path can only
+A block must indicate its content type because a given path can only
 contain blocks that have compatible types (think http header Content-type).
 
 A block must indicate its encoding if it is textual. UTF-8 could be a sane
@@ -73,7 +73,7 @@ Authorization
 Auditing / logging
 Distribution
 Deployment (think web installer like the most popular PHP webapps, maybe
-with an automated local::lib bootstrap or something)
+  with an automated local::lib bootstrap or something)
 Data storage (database, key/value store, OODB, KiokuDB)?
 Plugin deployment/distribution
 Editing environment
