@@ -66,6 +66,14 @@ minimize memory usage of the process. Scalar printing could be used for
 small blocks (<64KB?). Static blocks are usually text, pictures, sound, video
 or something else of binary nature.
 
+IMPROVE THESE:
+
+Owner of stuff is a principal, not a user (allows shared ownership).
+
+A principal can be either a group or a user.
+
+A group is a collection of users and/or groups (hierarchial).
+
 TODO (please expand/move):
 
 Authentication
@@ -86,6 +94,7 @@ User/group/role management (Kerberos, LDAP, OpenID, SAML)
 Identity management (view as guest, view as another user)
 Choose a framework (or frameworks, with dispatching plugins)
 Maybe use some stuff from http://weftsoar.net/~hdp/cpan/ for deployment
+Ownership/permission inheritance (do as Active Directory?)
 
 Unrefined logs from #perlcms@irc.perl.org:
 
