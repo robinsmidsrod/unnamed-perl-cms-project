@@ -75,6 +75,10 @@ A principal can be either a group or a user.
 
 A group is a collection of users and/or groups (hierarchial).
 
+Installation suggestions from zby:
+
+http://www.simon-cozens.org/content/deploying-perl-web-applications
+
 TODO (please expand/move):
 
 Authentication
