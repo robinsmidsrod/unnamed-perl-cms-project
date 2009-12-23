@@ -79,6 +79,28 @@ Installation suggestions from zby:
 
 http://www.simon-cozens.org/content/deploying-perl-web-applications
 
+DEPLOYMENT:
+
+We might actually approach the monumental task of building binary PAR
+packages (relocatable) and use PAR::Repository to distribute these binary
+packages to the end users using PAR::Repository::Client to update a local
+repo for the user. This repo update could be run as a simple CGI application
+that requires nothing but perl core to bootstrap a proper environment.
+
+Suexec is required for this to work so that $HOME is set and stuff can be
+deployed in the proper place with proper permissions.
+
+Repo update should be able to pull specific versions of packages, to support
+consistent views and avoid update breakage. Might consider
+unstable/testing/stable branches to choose your level of stability.
+
+More information about deployment and PAR:
+
+http://stackoverflow.com/questions/1710353/how-to-distribute-native-perl-scripts-without-custom-module-overhead
+http://infotrope.net/blog/2009/12/18/cpan-fail/#comment-3165
+http://search.cpan.org/perldoc?Par::Repository
+http://search.cpan.org/perldoc?Par::Repository::Client
+
 TODO (please expand/move):
 
 Authentication
