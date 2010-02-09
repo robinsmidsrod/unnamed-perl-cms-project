@@ -96,6 +96,7 @@ unstable/testing/stable branches to choose your level of stability.
 
 More information about deployment and PAR:
 
+http://use.perl.org/~Alias/journal/40170
 http://stackoverflow.com/questions/1710353/how-to-distribute-native-perl-scripts-without-custom-module-overhead
 http://infotrope.net/blog/2009/12/18/cpan-fail/#comment-3165
 http://search.cpan.org/perldoc?Par::Repository
