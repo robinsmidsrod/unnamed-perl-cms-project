@@ -1,0 +1,185 @@
+Date: Tue, 09 Feb 2010 11:21:59 +0100
+From: Steffen Mueller <smueller@cpan.org>
+To: robin@smidsrod.no
+Subject: Perl Deployment/PAR
+
+Hi Robin,
+
+I just read your comment on Alias' blog post. If you have any questions
+about PAR::Repository and the related tools, please let me know.
+
+Maybe it'd be worthwhile to add another resource on PAR/PAR::Repository here
+(http://github.com/robinsmidsrod/unnamed-perl-cms-project/blob/master/README):
+http://steffen-mueller.net/talks/appdeployment/
+
+I once built a PAR::Repository of a very large part of CPAN by using
+PAR::Dist::FromPPM to convert ActiveState's PPMs to .pars for Strawberry. It
+generally worked, but please note that such a huge PAR repository will come
+with huge index files. This means that it will be unsuitable for direct use
+in a CGI environment. You could only use it to install (preferably extract!)
+the .par files into some local library directory. This would work via
+PAR::Dist::install_par() which takes installation target arguments similar
+to ExtUtils::Install::install(). PAR::Dist::install_par() requires either
+Archive::Zip or a working unzip executable. It might also work with an
+installation of Archive::Unzip::Burst, but of all the alternative, the
+latter is by far the hardest to install and the least common.
+
+I had a related conversation with Matt Trout recently. His problem with PAR
+is mainly that it just differs between platforms based on arch and perl
+version. Sometimes, however, you need to include different information as
+well: Food for thought: What version of some system library does this build
+link against?
+This *could* lead to requiring PAR repositories for specific linux
+distributions.
+
+Now, you can have multiple PAR::Repository::Client objects that you ask for
+dependency resolution in order. Therefore, you could have a repository of
+portable modules and the XS stuff that doesn't link against strange system
+libraries. Then you add smaller repositories with the very specific modules
+that link, say, against certain versions of boost or so. What I contemplated
+but never implemented is an inherent cascading of repositories, so that one
+repository could declare another as a fall-back. Done right, that might make
+such a setup easier.
+
+I'm sorry this turned into such a rant. Let me know if you need any further
+ranting^W advice.
+
+Best regards,
+Steffen
+
+----
+
+Date: Wed, 10 Feb 2010 18:43:01 +0100
+From: =?UTF-8?B?Um9iaW4gU21pZHNyw7hk?= <robin@smidsrod.no>
+To: Steffen Mueller <smueller@cpan.org>
+Subject: Re: Perl Deployment/PAR
+
+On 09.02.2010 11:21, Steffen Mueller wrote:
+> Maybe it'd be worthwhile to add another resource on PAR/PAR::Repository
+> here
+> (http://github.com/robinsmidsrod/unnamed-perl-cms-project/blob/master/README):
+> 
+> http://steffen-mueller.net/talks/appdeployment/
+
+Thanks for the link. It is definitely worthwhile. I don't understand all of
+the things you talk about, but I try to follow along as much as possible.
+
+> I once built a PAR::Repository of a very large part of CPAN by using
+> PAR::Dist::FromPPM to convert ActiveState's PPMs to .pars for
+> Strawberry. It generally worked, but please note that such a huge PAR
+> repository will come with huge index files. This means that it will be
+> unsuitable for direct use in a CGI environment. You could only use it to
+> install (preferably extract!) the .par files into some local library
+> directory.
+
+My plan was to make a web-based CPAN installer for non-root environments,
+not really a specific application installer.
+
+How big are these index files, and if we decided to package all of CPAN, how
+big would they become?
+
+> This would work via PAR::Dist::install_par() which takes
+> installation target arguments similar to ExtUtils::Install::install().
+> PAR::Dist::install_par() requires either Archive::Zip or a working unzip
+> executable. It might also work with an installation of
+> Archive::Unzip::Burst, but of all the alternative, the latter is by far
+> the hardest to install and the least common.
+
+I was thinking of packaging the necessary dependencies to bootstrap local
+PAR installation inside the CGI-script (by use of __DATA__ and some other
+tool).
+
+My plan was basically to shell into the public_html/cgi-bin directory on the
+server for the user, execute wget http://url/to/cpan-installer.cgi && chmod
++x cpan-installer.cgi and then access the CGI using the web browser. If you
+don't have shell access you'd just upload the script via FTP (or some other
+method) and make it executable. If you already have a cgi-bin directory you
+wouldn't even need to make it executable, right? I think we would have to
+assume that the ISP at least is somewhat security-minded and has enabled
+suexec or some other feature so that CGI-scripts are executed with the
+correct permissions. In fact, if the permissions are to some commonly known
+UID we could even let the script inform the user that their ISP is unsecure
+and give them advice how to fix the problem (that is: tell the ISP to do
+these specified tasks to fix the problem).
+
+> I had a related conversation with Matt Trout recently. His problem with
+> PAR is mainly that it just differs between platforms based on arch and
+> perl version. Sometimes, however, you need to include different
+> information as well: Food for thought: What version of some system
+> library does this build link against?
+> This *could* lead to requiring PAR repositories for specific linux
+> distributions.
+
+I know that this is a problem. I tried installing XML::LibXML via PAR on
+Debian (can't remember which version), which was packaged from an Ubuntu
+machine. It segfaulted in a very bad way. My plan was basically to use
+virtual machine images to build as much as possible of the packages for the
+given OS (and version) and then publish this to the repo. My suggestion is
+to build only the packages on CPAN that the OS have the support libraries in
+their packaging system. The end solution is that the CGI-installer would
+then be able to give the end user a message that says something like this:
+"Ask your admin to run these commands to install the following distribution
+packages which are required for this module to work properly:" and then
+gives a list of (for Debian) apt-get commands to run to install the
+required. In terms of distribution to support initially I'd go with numbers
+from distrowatch. But RedHat and Debian would be obvious number ones and
+then probably SuSE and Ubuntu as secondary choices.
+
+> Now, you can have multiple PAR::Repository::Client objects that you ask
+> for dependency resolution in order. Therefore, you could have a
+> repository of portable modules and the XS stuff that doesn't link
+> against strange system libraries. Then you add smaller repositories with
+> the very specific modules that link, say, against certain versions of
+> boost or so. What I contemplated but never implemented is an inherent
+> cascading of repositories, so that one repository could declare another
+> as a fall-back. Done right, that might make such a setup easier.
+
+Yep, either that or explicitly make indexes/repositories based on known
+targets (like OS distribution versions). With use of lsb_release you could
+make the client choose the proper distribution channel. Generally you'd need
+the client to be able to resolve the proper distribution channel for the
+system based on arch, perl version, system libs and (probably) more
+variables. That specific repo / distribution channel it resolves could then
+include links/references/hyperlinks to the generic/portable repo. For this
+to work we would need some kind of data format to record external
+dependencies (does the toolchain already have this?). This data file could
+be populated when the PAR is built and injected into the repository. By
+using a data format instead of a server we could keep the repo in a format
+usable for mirroring (just like CPAN). This data format should probably also
+keep information about who packaged the PAR, checksum (SHA1/MD5) and
+possibly other information.
+
+Alternatively you could have a data file for each CPAN package which
+includes information about which alternative binary packages are available
+in the repository. The client installer can download this file, run some
+kind of algorithm on that compares the data file against the local system
+and determines which PAR file is applicable for the given server. We could
+use a system similar to nixos.org to build a hash-value based on the
+specific versions of dependencies that went into building the PAR and use
+that as part of the filename that is available as an alternative. That way
+the data file could explain which dependencies might be required, the client
+figures out which are available on the local system, and builds a hash that
+will mirror the available dependencies. If the hash they want is not
+available the client could push the dependency list to some service that
+would distribute the PAR packaging request to PAR packagers.
+
+Actually, the more I think about it, this is very similar to a nixos.org
+setup, but instead of being based on /nix it would be rooted in some
+user-owned directory. How can we steal their ideas and use them for the good
+of Perl?
+
+> I'm sorry this turned into such a rant. Let me know if you need any
+> further ranting^W advice.
+
+I have a lot of ideas, but not a lot of time. Realisticly I probably wont
+have much time to look into these things until summer (July), but some
+specification work I think I would be able to offer before then.
+
+Do you mind if I include your email in my README about deployment?
+
+I'm available for discussion about this topic on #perlcms on irc.perl.org.
+My nickname is robinsmidsrod. Just mention me by name if you for some reason
+should drop in. 
+
+Regards,
+Robin Smidsrød
