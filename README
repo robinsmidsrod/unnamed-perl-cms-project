@@ -94,6 +94,8 @@ Repo update should be able to pull specific versions of packages, to support
 consistent views and avoid update breakage. Might consider
 unstable/testing/stable branches to choose your level of stability.
 
+There is more discussion about deployment issues in deployment.txt.
+
 More information about deployment and PAR:
 
 http://steffen-mueller.net/talks/appdeployment/
@@ -102,6 +104,7 @@ http://stackoverflow.com/questions/1710353/how-to-distribute-native-perl-scripts
 http://infotrope.net/blog/2009/12/18/cpan-fail/#comment-3165
 http://search.cpan.org/perldoc?Par::Repository
 http://search.cpan.org/perldoc?Par::Repository::Client
+http://svn.openfoundry.org/par/misc/parClientBootstrapBootstrap.pl
 
 TODO (please expand/move):
 

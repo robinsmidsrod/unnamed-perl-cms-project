@@ -183,3 +183,67 @@ should drop in.
 
 Regards,
 Robin Smidsrød
+
+----
+
+Date: Wed, 10 Feb 2010 19:40:16 +0100
+From: Steffen Mueller <smueller@cpan.org>
+To: =?UTF-8?B?Um9iaW4gU21pZHNyw7hk?= <robin@smidsrod.no>
+Subject: Re: Perl Deployment/PAR
+
+Hi Robin,
+
+Robin Smidsrød wrote:
+> My plan was to make a web-based CPAN installer for non-root
+> environments, not really a specific application installer.
+
+My attempts: (no web involved)
+http://svn.openfoundry.org/par/misc/parClientBootstrapBootstrap.pl
+
+I don't quite remember why I failed.
+
+> How big are these index files, and if we decided to package all of CPAN,
+> how big would they become?
+
+I don't quite remember. O(MB) or so. But it was in 2006 and PPM never had
+all of CPAN.
+
+> I was thinking of packaging the necessary dependencies to bootstrap
+> local PAR installation inside the CGI-script (by use of __DATA__ and
+> some other tool).
+
+See above for my baby steps. It's very crude. Just an experiment.
+
+> My plan was basically to shell into the public_html/cgi-bin directory on
+> the server for the user, execute wget http://url/to/cpan-installer.cgi
+> && chmod +x cpan-installer.cgi and then access the CGI using the web
+> browser. If you don't have shell access you'd just upload the script via
+> FTP (or some other method) and make it executable. If you already have a
+> cgi-bin directory you wouldn't even need to make it executable, right?
+
+You still need to make it executable. Usually.
+
+> I know that this is a problem. I tried installing XML::LibXML via PAR on
+> Debian (can't remember which version), which was packaged from an Ubuntu
+> machine. It segfaulted in a very bad way. My plan was basically to use
+> virtual machine images to build as much as possible of the packages for
+> the given OS (and version) and then publish this to the repo.
+
+For all of CPAN and a handful of distros, that would be *a lot*.
+
+> Actually, the more I think about it, this is very similar to a nixos.org
+> setup, but instead of being based on /nix it would be rooted in some
+> user-owned directory. How can we steal their ideas and use them for the
+> good of Perl?
+
+The toolchain can do none of this, by the way. It's just
+archname/perlversion and then custom Makefile.PL logic. It's also way beyond
+my sysadmin skills. :)
+
+> Do you mind if I include your email in my README about deployment?
+
+No, not at all.
+
+Best regards,
+Steffen
+
